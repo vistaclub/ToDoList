@@ -8,10 +8,12 @@
 
 import Cocoa
 
-class ViewController: NSViewController {
-
+class ViewController: NSViewController, NSTableViewDelegate, NSTableViewDataSource {
+    
     @IBOutlet weak var importantCheckbox: NSButton!
     @IBOutlet weak var textField: NSTextField!
+    @IBOutlet weak var tableView: NSTableView!
+    @IBOutlet weak var deleteButton: NSButton!
     
     var toDoItems : [ToDoItem] = []
     
@@ -33,7 +35,7 @@ class ViewController: NSViewController {
             } catch {}
         }
         // update
-        
+        tableView.reloadData()
     }
     
     @IBAction func addClicked(_ sender: Any) {
@@ -50,22 +52,69 @@ class ViewController: NSViewController {
                     // important
                     toDoItem.important = true
                 }
+                // save the item to core data
                 (NSApplication.shared().delegate as? AppDelegate)?.saveAction(nil)
                 
                 textField.stringValue = ""
                 importantCheckbox.state = 0
                 
+                // refresh list items from core data
                 getToDoItems()
             }
         }
     }
     
-    override var representedObject: Any? {
-        didSet {
-        // Update the view, if already loaded.
+    
+    @IBAction func deleteClicked(_ sender: AnyObject) {
+        
+        let toDoItem = toDoItems[tableView.selectedRow]
+        
+        if let context = (NSApplication.shared().delegate as? AppDelegate)?.persistentContainer.viewContext {
+            context.delete(toDoItem)
+            
+            // Save core data content
+            (NSApplication.shared().delegate as? AppDelegate)?.saveAction(nil)
+            
+            // refresh the list
+            getToDoItems()
+            
+            // reset button to hidden
+            deleteButton.isHidden = true
         }
     }
 
-
+    // MARK: - TableView Stuff
+    func numberOfRows(in tableView: NSTableView) -> Int {
+        return toDoItems.count
+    }
+    
+    func tableView(_ tableView: NSTableView, viewFor tableColumn: NSTableColumn?, row: Int) -> NSView? {
+        
+        let toDoItem = toDoItems[row]
+        
+        if tableColumn?.identifier == "importantColumn" {
+            // IMPORTANT COLUMN
+            if let cell = tableView.make(withIdentifier: "importantCell", owner: self) as? NSTableCellView {
+                
+                if toDoItem.important {
+                    cell.textField?.stringValue = "❗️"
+                } else {
+                    cell.textField?.stringValue = ""
+                }
+                return cell
+            }
+        } else {
+            // TODO COLUMN
+            if let cell = tableView.make(withIdentifier: "todoItems", owner: self) as? NSTableCellView {
+                cell.textField?.stringValue = toDoItem.name!
+                
+                return cell
+            }
+        }
+        return nil
+    }
+    
+    func tableViewSelectionDidChange(_ notification: Notification) {
+        deleteButton.isHidden = false
+    }
 }
-
