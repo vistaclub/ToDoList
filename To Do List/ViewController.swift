@@ -10,6 +10,7 @@ import Cocoa
 
 class ViewController: NSViewController, NSTableViewDelegate, NSTableViewDataSource {
     
+    // IBOutlet links buttons and text fields from the storyboard to the ViewController
     @IBOutlet weak var importantCheckbox: NSButton!
     @IBOutlet weak var textField: NSTextField!
     @IBOutlet weak var tableView: NSTableView!
@@ -31,10 +32,10 @@ class ViewController: NSViewController, NSTableViewDelegate, NSTableViewDataSour
             do {
                 // set them to the class property
                 toDoItems = try context.fetch(ToDoItem.fetchRequest())
-                print(toDoItems.count)
+                print(toDoItems.count) // prints in the console window
             } catch {}
         }
-        // update
+        // update table with contents
         tableView.reloadData()
     }
     
@@ -64,11 +65,13 @@ class ViewController: NSViewController, NSTableViewDelegate, NSTableViewDataSour
         }
     }
     
-    
+    //  When the Delete button is pushed
     @IBAction func deleteClicked(_ sender: AnyObject) {
         
+        // When the todoItem is selected
         let toDoItem = toDoItems[tableView.selectedRow]
         
+        // Get the todoItems from coredata
         if let context = (NSApplication.shared().delegate as? AppDelegate)?.persistentContainer.viewContext {
             context.delete(toDoItem)
             
@@ -96,6 +99,7 @@ class ViewController: NSViewController, NSTableViewDelegate, NSTableViewDataSour
             // IMPORTANT COLUMN
             if let cell = tableView.make(withIdentifier: "importantCell", owner: self) as? NSTableCellView {
                 
+                // puts an exclamation icon in the important column if checked
                 if toDoItem.important {
                     cell.textField?.stringValue = "❗️"
                 } else {
@@ -113,7 +117,7 @@ class ViewController: NSViewController, NSTableViewDelegate, NSTableViewDataSour
         }
         return nil
     }
-    
+    // Tells the delegate if the selection changed and unhide the delete button
     func tableViewSelectionDidChange(_ notification: Notification) {
         deleteButton.isHidden = false
     }
